@@ -18,12 +18,14 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+@SuppressWarnings("deprecation")
 public class MainActivity extends Activity  implements SurfaceHolder.Callback,PreviewCallback{
 
 	private SurfaceView surfaceview;
 	
     private SurfaceHolder surfaceHolder;
 	
+
 	private Camera camera;
 	
     private Parameters parameters;

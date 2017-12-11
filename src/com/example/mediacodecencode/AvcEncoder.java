@@ -43,7 +43,7 @@ public class AvcEncoder
 	    mediaFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
 	    try {
 			mediaCodec = MediaCodec.createEncoderByType("video/avc");
-		} catch (IOException e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
