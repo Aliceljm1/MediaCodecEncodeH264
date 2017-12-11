@@ -34,7 +34,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback,Pr
 	
     private Parameters parameters;
     
-    int width = 1280;
+    int width = 1280;//352,288
     
     int height = 720;
     
@@ -155,9 +155,12 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback,Pr
                 parameters.setPreviewFormat(ImageFormat.NV21);//摄像头采集数据
                 parameters.getSupportedPreviewSizes();//获取可行的宽高
                 parameters.setPreviewSize(width, height);
+                
                 mCamera.setParameters(parameters);
                 mCamera.setPreviewDisplay(surfaceHolder);
+                mCamera.setDisplayOrientation(0);//保证水平
                 mCamera.startPreview();
+                
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -169,7 +172,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback,Pr
 	private Camera getBackCamera() {
         Camera c = null;
         try {
-            c = Camera.open(0); // attempt to get a Camera instance
+            c = android.hardware.Camera.open(); // attempt to get a Camera instance
         } catch (Exception e) {
             e.printStackTrace();
         }
