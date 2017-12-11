@@ -15,10 +15,14 @@ import android.media.MediaCodecList;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.WindowManager;
+import android.widget.LinearLayout;
 
 @SuppressWarnings("deprecation")
+@SuppressLint("NewApi")
 public class MainActivity extends Activity  implements SurfaceHolder.Callback,PreviewCallback{
 
 	private SurfaceView surfaceview;
@@ -34,11 +38,11 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback,Pr
     
     int height = 720;
     
-    int framerate = 30;
+    int framerate = 30;//帧率
     
-    int biterate = 8500*1000;
+    int biterate = 8500*1000;//比特率
     
-    private static int yuvqueuesize = 10;
+    private static int yuvqueuesize = 10;//缓存yuv数据 帧数, 避免内存占用过大
     
 	public static ArrayBlockingQueue<byte[]> YUVQueue = new ArrayBlockingQueue<byte[]>(yuvqueuesize); 
 	
@@ -48,11 +52,26 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback,Pr
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+//		initPar();
+		
 		setContentView(R.layout.activity_main);
 		surfaceview = (SurfaceView)findViewById(R.id.surfaceview);
+		
+        LinearLayout.LayoutParams lp= new LinearLayout.LayoutParams(width, height);
+        lp.gravity = Gravity.CENTER;
+        surfaceview.setLayoutParams(lp);//动态设置
+        
         surfaceHolder = surfaceview.getHolder();
         surfaceHolder.addCallback(this);
         SupportAvcCodec();
+	}
+
+
+	private void initPar() {
+		WindowManager wm = this.getWindowManager();
+	    height = wm.getDefaultDisplay().getWidth();
+	     width= wm.getDefaultDisplay().getHeight();
 	}
 	
 
@@ -82,20 +101,30 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback,Pr
     }
 
 
+    /**
+     * 摄像头的回调函数，每一帧数据
+     * //w*h 直接决定了当前摄像头返回的数据大小，YUV420格式，占用内存 w*h*3/2, 每个像素1.5字节；
+     * http://blog.csdn.net/u011046042/article/details/50849299
+     * */
 	@Override
 	public void onPreviewFrame(byte[] data, android.hardware.Camera camera) {
 		// TODO Auto-generated method stub
+		Log.i("MeidaCodec", "fr-size="+data.length);
 		putYUVData(data,data.length);
 	}
 	
 	public void putYUVData(byte[] buffer, int length) {
 		if (YUVQueue.size() >= 10) {
-			YUVQueue.poll();
+			Log.i("MeidaCodec","ERROR drop video data ");
+			YUVQueue.poll();//超出则丢弃，
 		}
 		YUVQueue.add(buffer);
 	}
 	
-	@SuppressLint("NewApi")
+
+	/**
+	 * 遍历支持的编码形式
+	 * */
 	private boolean SupportAvcCodec(){
 		if(Build.VERSION.SDK_INT>=18){
 			for(int j = MediaCodecList.getCodecCount() - 1; j >= 0; j--){
@@ -122,7 +151,9 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback,Pr
                     parameters = mCamera.getParameters();
                 }
                 parameters = mCamera.getParameters();
-                parameters.setPreviewFormat(ImageFormat.NV21);
+                
+                parameters.setPreviewFormat(ImageFormat.NV21);//摄像头采集数据
+                parameters.getSupportedPreviewSizes();//获取可行的宽高
                 parameters.setPreviewSize(width, height);
                 mCamera.setParameters(parameters);
                 mCamera.setPreviewDisplay(surfaceHolder);
